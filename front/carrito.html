@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Carrito</title>
+  <link rel="stylesheet" href="css/estilos.css" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/front/images/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/front/images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/front/images/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="logo">BiblioLiebre
+      <button id="toggle-theme" class="btn-logo"></button>
+    </div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="productos.html">Productos</a>
+      <a class="activo">Carrito</a>
+      <!-- <a href="ticket.html">Ticket</a> -->
+    </nav>
+    <div id="nombre-usuario"></div>
+  </header>
+
+  <main style="padding: 40px 60px;">
+    <h2>Carrito</h2>
+
+    <table class="carrito-tabla">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Precio</th>
+          <th>Cant.</th>
+          <th>Subtotal</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="carrito-body"></tbody>
+    </table>
+
+
+    <h3>Total: $ <span id="carrito-total">0</span></h3>
+
+    <button class="btn-principal" onclick="irATicket()">Finalizar compra</button>
+  </main>
+
+  <script src="js/main.js"></script>
+  <script src="js/carrito.js"></script>
+</body>
+
+</html>
