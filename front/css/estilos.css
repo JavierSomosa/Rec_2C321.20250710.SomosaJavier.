@@ -67,6 +67,18 @@ button:hover {
   cursor: pointer;
 }
 
+.error {
+  color: red;
+  margin-top: 10px;
+  font-size: 14px;
+}
+.add {
+  color: rgb(19, 182, 54);
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+
 
 /* nav */
 
@@ -220,6 +232,10 @@ nav a.activo {
   padding: 10px 18px;
   font-size: 16px;
   cursor: pointer;
+}
+
+#detalle-imagen {
+  width: 500px;
 }
 
 /* admin */

@@ -8,7 +8,7 @@ function login() {
     const pass = document.getElementById("login-pass").value.trim();
 
     if (!email || !pass) {
-    alert("Completá ambos campos");
+      mostrarError("Completá ambos campos");
     return;
     }
 
@@ -17,6 +17,12 @@ function login() {
     localStorage.setItem("admin", "true");
     window.location.href = "admin.html";
     } else {
-    alert("Usuario o contraseña incorrectos");
+    mostrarError("Usuario o contraseña incorrectos");
     }
 }
+
+function mostrarError(msg) {
+    const error = document.getElementById("login-error");
+    error.textContent = msg;
+}
+

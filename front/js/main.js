@@ -2,7 +2,7 @@ function entrar() {
   const nombre = document.getElementById("nombreUsuario").value.trim();
 
   if (!nombre) {
-    alert("Escribí tu nombre para continuar");
+    mostrarError("Escribí tu nombre para continuar");
     return;
   }
 
@@ -24,6 +24,11 @@ function mostrarNombreEnTopbar() {
 
 const CONTRASEÑA_ADMIN = "1234"; //contraseña del admin
 
+function mostrarError(msg) {
+    const error = document.getElementById("login-error");
+    error.textContent = msg;
+}
+
 function abrirAdmin() {
   const contraseña = prompt("Ingresá la contraseña de administrador:");
 
@@ -31,7 +36,8 @@ function abrirAdmin() {
     localStorage.setItem("admin", "true");
     window.location.href = "admin.html";
   } else {
-    alert("Contraseña incorrecta");
+    mostrarError("Contraseña incorrecta");
+    
   }
 }
 
