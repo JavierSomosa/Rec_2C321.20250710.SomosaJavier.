@@ -16,7 +16,7 @@ const Usuario = sequelize.define(
       allowNull: false,
     },
     email: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(255),
       allowNull: false,
       unique: true,
     },
