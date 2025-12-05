@@ -1,5 +1,11 @@
 // Configuración de la API
-const API_BASE = "http://localhost:3000/api";
+// Si estamos en Live Server (cualquier puerto que no sea 3000), usar localhost:3000
+// Si no, usar ruta relativa (mismo servidor)
+const currentPort = window.location.port;
+const isLiveServer = currentPort && currentPort !== "3000" && (currentPort.startsWith("55") || currentPort.startsWith("8080") || currentPort.startsWith("8000"));
+const API_BASE = isLiveServer 
+  ? `${window.location.protocol}//${window.location.hostname}:3000/api`
+  : "/api";
 
 let productoActual = null;
 let cantidad = 1;
@@ -7,9 +13,14 @@ let cantidad = 1;
 async function cargarDetalle() {
   mostrarNombreEnTopbar();
 
-  const idSeleccionado = Number(
-    localStorage.getItem("productoSeleccionado")
-  );
+  // Obtener ID desde parámetros de la URL
+  const urlParams = new URLSearchParams(window.location.search);
+  let idSeleccionado = Number(urlParams.get("id"));
+  
+  // Si no está en la URL, intentar desde localStorage (compatibilidad)
+  if (!idSeleccionado) {
+    idSeleccionado = Number(localStorage.getItem("productoSeleccionado"));
+  }
 
   if (!idSeleccionado) {
     document.body.innerHTML = "<p>No se seleccionó ningún producto.</p>";
@@ -30,11 +41,19 @@ async function cargarDetalle() {
     productoActual = await response.json();
 
     // Usar el campo 'image' de la BD o una imagen por defecto
-    const imagenSrc = productoActual.image || "/images/foto-productos/portada-default.jpg";
+    let imagenSrc = productoActual.image || "images/foto-productos/portada-default.jpg";
+    // Si la imagen empieza con /public, mantenerla así (servidor Node.js)
+    if (imagenSrc.startsWith("/public")) {
+      // Ruta absoluta para servidor Node.js
+      imagenSrc = imagenSrc;
+    } else if (!imagenSrc.startsWith("/") && !imagenSrc.startsWith("http") && !imagenSrc.startsWith("images")) {
+      // Si no tiene ruta, agregar /public/images/
+      imagenSrc = "/public/images/" + imagenSrc;
+    }
     
     document.getElementById("detalle-imagen").src = imagenSrc;
     document.getElementById("detalle-imagen").onerror = function() {
-      this.src = "/images/foto-productos/portada-default.jpg";
+      this.src = "images/foto-productos/portada-default.jpg";
     };
     document.getElementById("detalle-titulo").textContent =
       productoActual.titulo || "Sin título";

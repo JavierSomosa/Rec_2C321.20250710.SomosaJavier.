@@ -60,11 +60,18 @@ button:hover {
 
 .btn-logo {
   margin-left: 10px;
-  width: 20px;
-  height: 20px;
-  background: url("/front/images/night-mode.png") no-repeat center / contain;
+  width: 32px;
+  height: 32px;
+  background: url("../images/night-mode.png") no-repeat center / contain;
   border: none;
   cursor: pointer;
+  background-color: transparent;
+  padding: 0;
+  transition: opacity 0.2s ease;
+}
+
+.btn-logo:hover {
+  opacity: 0.7;
 }
 
 .error {

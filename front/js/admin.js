@@ -1,120 +1,123 @@
-function obtenerProductos() {
-    return JSON.parse(localStorage.getItem("productos")) || [];
-}
+// Configuración de la API
+// Si estamos en Live Server (cualquier puerto que no sea 3000), usar localhost:3000
+// Si no, usar ruta relativa (mismo servidor)
+const currentPort = window.location.port;
+const isLiveServer = currentPort && currentPort !== "3000" && (currentPort.startsWith("55") || currentPort.startsWith("8080") || currentPort.startsWith("8000"));
+const API_BASE = isLiveServer 
+  ? `${window.location.protocol}//${window.location.hostname}:3000/api`
+  : "/api";
 
-function guardarProductos(lista) {
-    localStorage.setItem("productos", JSON.stringify(lista));
+let productos = [];
+let productoSeleccionado = null;
+
+async function cargarProductos() {
+    try {
+        const response = await fetch(`${API_BASE}/productos`);
+        const resultado = await response.json();
+        productos = resultado.data || [];
+        refrescarTabla();
+    } catch (error) {
+        console.error("Error al cargar productos:", error);
+        alert("Error al cargar productos. Asegurate de que el servidor esté corriendo.");
+    }
 }
 
 function refrescarTabla() {
-    const productos = obtenerProductos();
     const tbody = document.getElementById("admin-tbody");
+    if (!tbody) return;
+    
     tbody.innerHTML = "";
 
+    if (productos.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align: center; padding: 20px;'>No hay productos</td></tr>";
+        return;
+    }
+
     productos.forEach((p) => {
-    const fila = document.createElement("tr");
+        const fila = document.createElement("tr");
+        
+        const fecha = new Date(p.fechaSalida).toLocaleDateString('es-AR');
+        const estadoTexto = p.estado ? "Activo" : "Inactivo";
+        const estadoClass = p.estado ? "estado-activo" : "estado-inactivo";
 
-    fila.innerHTML = `
-        <td>${p.id}</td>
-        <td>${p.titulo}</td>
-        <td>${p.tipo}</td>
-        <td>$${p.precio}</td>
-        <td>${p.fecha}</td>
-        <td>${p.estado}</td>
-    `;
+        fila.innerHTML = `
+            <td>${p.id}</td>
+            <td>${p.titulo}</td>
+            <td>${p.tipo}</td>
+            <td>$${p.precio}</td>
+            <td>${fecha}</td>
+            <td class="${estadoClass}">${estadoTexto}</td>
+            <td>
+                <button onclick="editarProducto(${p.id})" class="btn-edit">Editar</button>
+                ${p.estado 
+                    ? `<button onclick="confirmarBaja(${p.id})" class="btn-delete">Desactivar</button>`
+                    : `<button onclick="confirmarActivar(${p.id})" class="btn-activate">Activar</button>`
+                }
+            </td>
+        `;
 
-    tbody.appendChild(fila);
+        tbody.appendChild(fila);
     });
 }
 
-function generarNuevoID() {
-    const productos = obtenerProductos();
-    if (productos.length === 0) return 1;
-
-    // Busca el ID mayor
-    const maxId = Math.max(...productos.map(p => p.id));
-    return maxId + 1;
-}
-
-
-
 function alta() {
-    const titulo = prompt("Título del producto:");
-    if (!titulo) return;
-
-    const tipo = prompt("Tipo (Libro / Película):");
-    if (!tipo) return;
-
-    const precio = prompt("Precio:");
-    if (!precio || isNaN(precio)) return alert("Precio inválido");
-
-    const fecha = prompt("Fecha de salida (YYYY-MM-DD):");
-    if (!fecha) return;
-
-    const estado = prompt("Estado (Activo / Inactivo):") || "Activo";
-
-    const productos = obtenerProductos();
-
-    const nuevo = {
-    id: generarNuevoID(), // genera un ID unico
-    titulo,
-    tipo,
-    precio: Number(precio),
-    fecha,
-    estado,
-    };
-
-    productos.push(nuevo);
-    guardarProductos(productos);
-    refrescarTabla();
+    window.location.href = "/admin/productos/crear";
 }
 
-
-function baja() {
-    const id = Number(prompt("ID a eliminar:"));
-    if (!id) return;
-
-    const productos = obtenerProductos();
-    const filtrados = productos.filter((p) => p.id !== id);
-
-    if (filtrados.length === productos.length) {
-    alert("No se encontró ningún producto con ese ID");
-    return;
+async function confirmarBaja(id) {
+    if (!confirm("¿Estás seguro de que deseas desactivar este producto?")) {
+        return;
     }
-
-    guardarProductos(filtrados);
-    refrescarTabla();
-}
-
-
-function modificar() {
-    const id = Number(prompt("ID a modificar:"));
-    if (!id) return;
-
-    const productos = obtenerProductos();
-    const producto = productos.find((p) => p.id === id);
-
-    if (!producto) {
-    alert("No existe un producto con ese ID.");
-    return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/productos/${id}`, {
+            method: "DELETE"
+        });
+        
+        if (response.ok) {
+            alert("Producto desactivado exitosamente");
+            await cargarProductos();
+        } else {
+            const error = await response.json();
+            alert("Error: " + (error.message || "Error al desactivar producto"));
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error al desactivar producto");
     }
-
-    const nuevoTitulo = prompt("Nuevo título:", producto.titulo);
-    const nuevoTipo = prompt("Nuevo tipo:", producto.tipo);
-    const nuevoPrecio = prompt("Nuevo precio:", producto.precio);
-    const nuevaFecha = prompt("Nueva fecha (YYYY-MM-DD):", producto.fecha);
-    const nuevoEstado = prompt("Nuevo estado:", producto.estado);
-
-  // actualiza
-    producto.titulo = nuevoTitulo || producto.titulo;
-    producto.tipo = nuevoTipo || producto.tipo;
-    producto.precio = Number(nuevoPrecio) || producto.precio;
-    producto.fecha = nuevaFecha || producto.fecha;
-    producto.estado = nuevoEstado || producto.estado;
-
-    guardarProductos(productos);
-    refrescarTabla();
 }
 
+async function confirmarActivar(id) {
+    if (!confirm("¿Estás seguro de que deseas activar este producto?")) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/productos/${id}/activar`, {
+            method: "PUT"
+        });
+        
+        if (response.ok) {
+            alert("Producto activado exitosamente");
+            await cargarProductos();
+        } else {
+            const error = await response.json();
+            alert("Error: " + (error.message || "Error al activar producto"));
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error al activar producto");
+    }
+}
 
-document.addEventListener("DOMContentLoaded", refrescarTabla);
+function editarProducto(id) {
+    window.location.href = `/admin/productos/editar/${id}`;
+}
+
+// Inicialización
+document.addEventListener("DOMContentLoaded", async () => {
+    // Verificar si estamos en la página admin.html (no en el dashboard EJS)
+    if (document.getElementById("admin-tbody")) {
+        await cargarProductos();
+    }
+});

@@ -1,4 +1,11 @@
-const API_BASE = "http://localhost:3000/api";
+// Configuración de la API
+// Si estamos en Live Server (cualquier puerto que no sea 3000), usar localhost:3000
+// Si no, usar ruta relativa (mismo servidor)
+const currentPort = window.location.port;
+const isLiveServer = currentPort && currentPort !== "3000" && (currentPort.startsWith("55") || currentPort.startsWith("8080") || currentPort.startsWith("8000"));
+const API_BASE = isLiveServer 
+  ? `${window.location.protocol}//${window.location.hostname}:3000/api`
+  : "/api";
 
 async function cargarTicket() {
   mostrarNombreEnTopbar();
@@ -80,7 +87,7 @@ async function descargarPDF() {
     // Intentar cargar logo (pero no bloquear si falla)
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = "/images/favicon/rabbit.png";
+    img.src = "images/favicon/rabbit.png";
 
     // Función para generar el PDF (con o sin imagen)
     const generarPDF = () => {

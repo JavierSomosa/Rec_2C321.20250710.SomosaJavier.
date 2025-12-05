@@ -1,5 +1,11 @@
 // Configuración de la API
-const API_BASE = "http://localhost:3000/api";
+// Si estamos en Live Server (cualquier puerto que no sea 3000), usar localhost:3000
+// Si no, usar ruta relativa (mismo servidor)
+const currentPort = window.location.port;
+const isLiveServer = currentPort && currentPort !== "3000" && (currentPort.startsWith("55") || currentPort.startsWith("8080") || currentPort.startsWith("8000"));
+const API_BASE = isLiveServer 
+  ? `${window.location.protocol}//${window.location.hostname}:3000/api`
+  : "/api";
 
 let productosActuales = [];
 let filtros = {
@@ -49,14 +55,28 @@ function renderProductos(lista) {
 
   lista.forEach((p) => {
     // Usar el campo 'image' de la BD o una imagen por defecto
-    const imagenSrc = p.image || "/images/foto-productos/portada-default.jpg";
+    // Las imágenes subidas se guardan como /public/images/... y el servidor las sirve desde /public
+    let imagenSrc = p.image || "images/foto-productos/portada-default.jpg";
+    // Si la imagen empieza con /public, mantenerla así (servidor Node.js)
+    // Si no, usar ruta relativa (Live Server)
+    if (imagenSrc.startsWith("/public")) {
+      // Ruta absoluta para servidor Node.js
+      imagenSrc = imagenSrc;
+    } else if (!imagenSrc.startsWith("/") && !imagenSrc.startsWith("http") && !imagenSrc.startsWith("images")) {
+      // Si no tiene ruta, agregar /public/images/
+      imagenSrc = "/public/images/" + imagenSrc;
+    }
     
     cont.innerHTML += `
-      <article class="card-producto" onclick="verDetalle(${p.id})">
-        <img src="${imagenSrc}" alt="${p.titulo}" onerror="this.src='/images/foto-productos/portada-default.jpg'">
-        <h3>${p.titulo}</h3>
+      <article class="card-producto">
+        <img src="${imagenSrc}" alt="${p.titulo}" onclick="verDetalle(${p.id})" style="cursor: pointer;" onerror="this.src='images/foto-productos/portada-default.jpg'">
+        <h3 onclick="verDetalle(${p.id})" style="cursor: pointer;">${p.titulo}</h3>
         <p>${p.descripcion || "Sin descripción"}</p>
         <p><strong>Precio: $${p.precio || 0}</strong></p>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button onclick="verDetalle(${p.id})" style="flex: 1; padding: 8px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Ver Detalle</button>
+          <button onclick="agregarAlCarrito(${p.id}, '${p.titulo}', ${p.precio})" style="flex: 1; padding: 8px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Agregar</button>
+        </div>
       </article>
     `;
   });
@@ -107,8 +127,37 @@ async function cargarProductos() {
 }
 
 function verDetalle(id) {
-  localStorage.setItem("productoSeleccionado", id);
-  window.location.href = "detalle.html";
+  // Usar parámetros de URL en lugar de localStorage
+  window.location.href = `detalle.html?id=${id}`;
+}
+
+function agregarAlCarrito(id, titulo, precio) {
+  const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+  
+  const existente = carrito.find(item => item.id === id);
+  
+  if (existente) {
+    existente.cantidad += 1;
+  } else {
+    carrito.push({
+      id: id,
+      titulo: titulo,
+      precio: precio,
+      cantidad: 1
+    });
+  }
+  
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+  
+  // Mostrar notificación
+  const notif = document.createElement("div");
+  notif.textContent = "Producto agregado al carrito";
+  notif.style.cssText = "position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 15px 20px; border-radius: 5px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);";
+  document.body.appendChild(notif);
+  
+  setTimeout(() => {
+    notif.remove();
+  }, 2000);
 }
 
 // Inicialización cuando carga la página
